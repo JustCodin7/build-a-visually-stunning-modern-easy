@@ -1,0 +1,2 @@
+/* Additional spacing and guidance for the complete quote form. */
+.quote-form .field label{color:#3c4358}.quote-form .field label span{color:#858393;font-weight:600;text-transform:none;letter-spacing:0}.quote-form .field input::placeholder,.quote-form .field textarea::placeholder{color:#8b8991;opacity:1}.form-helper{margin:-2px 0 10px;color:#6e6b77;font-size:11px;line-height:1.5}.form-helper:before{content:"✦";color:#f0605a;margin-right:7px}.quote-form .field:has(input[type=email]){margin-top:-3px}@media(max-width:780px){.form-helper{grid-column:auto}}
