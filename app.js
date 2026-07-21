@@ -2,6 +2,63 @@
 const money = new Intl.NumberFormat("en-ZA", { style: "currency", currency: "ZAR", maximumFractionDigits: 0 });
 const page = document.body.dataset.page || "";
 
+/* Minimal CSV parser — handles quoted fields and commas inside quotes,
+   which Google Sheets uses whenever a cell (e.g. an alt description)
+   contains a comma. */
+function parseCSV(text) {
+  const rows = []; let row = [], field = "", inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (inQuotes) {
+      if (c === '"') { if (text[i + 1] === '"') { field += '"'; i++; } else inQuotes = false; }
+      else field += c;
+    } else if (c === '"') inQuotes = true;
+    else if (c === ",") { row.push(field); field = ""; }
+    else if (c === "\n" || c === "\r") {
+      if (c === "\r" && text[i + 1] === "\n") i++;
+      row.push(field); rows.push(row); row = []; field = "";
+    } else field += c;
+  }
+  if (field.length || row.length) { row.push(field); rows.push(row); }
+  return rows.filter(r => r.some(cell => cell.trim() !== ""));
+}
+
+function csvToProducts(text) {
+  const rows = parseCSV(text);
+  if (!rows.length) return [];
+  const headers = rows[0].map(h => h.trim().toLowerCase());
+  return rows.slice(1).map(r => {
+    const obj = {};
+    headers.forEach((h, i) => obj[h] = (r[i] || "").trim());
+    if (!obj.model) return null;
+    return {
+      id: (obj.model || "").toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+      model: obj.model,
+      condition: obj.condition || "Used",
+      storage: obj.storage || "",
+      price: Number(String(obj.price).replace(/[^0-9.]/g, "")) || 0,
+      image: obj.image || "",
+      alt: obj.alt || obj.model
+    };
+  }).filter(Boolean);
+}
+
+/* Loads products from the published Google Sheet if one is configured.
+   Falls back silently to the static EAGLE.products array on any error,
+   so a bad link or an offline sheet never breaks the site. */
+async function loadProducts() {
+  if (!EAGLE.productsSheetUrl) return;
+  try {
+    const sep = EAGLE.productsSheetUrl.includes("?") ? "&" : "?";
+    const res = await fetch(`${EAGLE.productsSheetUrl}${sep}cachebust=${Date.now()}`);
+    if (!res.ok) throw new Error(`Sheet fetch failed: ${res.status}`);
+    const products = csvToProducts(await res.text());
+    if (products.length) EAGLE.products = products;
+  } catch (err) {
+    console.warn("Could not load live product sheet, using fallback data.", err);
+  }
+}
+
 function header() {
   const links = [["index.html", "Home", "home"], ["shop.html", "Shop", "shop"], ["repairs.html", "Repairs", "repairs"], ["about.html", "About", "about"], ["contact.html", "Contact", "contact"]];
   return `<header class="site-header"><a class="brand" href="index.html" aria-label="Eagle iPhone Store home"><span class="brand-mark">E</span><span>EAGLE <b>iPHONE</b></span></a><button class="nav-toggle" aria-label="Open navigation" aria-expanded="false">☰</button><nav class="site-nav">${links.map(([url,label,id]) => `<a class="${page === id ? "active" : ""}" href="${url}">${label}</a>`).join("")}<a class="nav-quote" href="${page === "shop" ? "#quote" : "quote.html"}">Get a quote <span>↗</span></a></nav></header>`;
@@ -42,12 +99,13 @@ function setupQuoteForm(form) {
   });
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   const refresh = document.createElement("link"); refresh.rel = "stylesheet"; refresh.href = "refresh.css"; document.head.append(refresh);
   const formStyles = document.createElement("link"); formStyles.rel = "stylesheet"; formStyles.href = "form-enhancements.css"; document.head.append(formStyles);
   document.querySelector("#header").innerHTML = header(); document.querySelector("#footer").innerHTML = footer();
   const navButton = document.querySelector(".nav-toggle"), nav = document.querySelector(".site-nav");
   navButton?.addEventListener("click", () => { const open = nav.classList.toggle("open"); navButton.setAttribute("aria-expanded", open); });
+  await loadProducts();
   renderProducts(document.querySelector("[data-products]"), page === "home" ? EAGLE.products.slice(0, 3) : EAGLE.products);
   setupQuoteForm(document.querySelector("[data-quote-form]"));
   if (page === "shop") setupShop();
