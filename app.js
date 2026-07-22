@@ -70,7 +70,7 @@ function footer() {
 
 function renderProducts(target, products = EAGLE.products) {
   if (!target) return;
-  target.innerHTML = products.map(p => `<article class="product-card"><div class="product-image"><img src="${p.image}" alt="${p.alt}"><span class="condition ${p.condition.toLowerCase().replace(/[^a-z]/g, "")}">${p.condition}</span></div><div class="product-info"><p class="eyebrow">${p.storage} · Ready to go</p><h3>${p.model}</h3><div class="product-bottom"><strong>${money.format(p.price)}</strong><a href="quote.html?type=buying&item=${encodeURIComponent(p.model + " — " + p.condition + " — " + p.storage)}" aria-label="Request quote for ${p.model}">Get quote <span>↗</span></a></div></div></article>`).join("");
+  target.innerHTML = products.map(p => `<article class="product-card"><div class="product-image"><img src="${p.image}" alt="${p.alt}" loading="lazy" decoding="async"><span class="condition ${p.condition.toLowerCase().replace(/[^a-z]/g, "")}">${p.condition}</span></div><div class="product-info"><p class="eyebrow">${p.storage} · Ready to go</p><h3>${p.model}</h3><div class="product-bottom"><strong>${money.format(p.price)}</strong><a href="quote.html?type=buying&item=${encodeURIComponent(p.model + " — " + p.condition + " — " + p.storage)}" aria-label="Request quote for ${p.model}">Get quote <span>↗</span></a></div></div></article>`).join("");
 }
 
 function quoteOptions(type) {
@@ -102,9 +102,22 @@ function setupQuoteForm(form) {
 document.addEventListener("DOMContentLoaded", async () => {
   const refresh = document.createElement("link"); refresh.rel = "stylesheet"; refresh.href = "refresh.css"; document.head.append(refresh);
   const formStyles = document.createElement("link"); formStyles.rel = "stylesheet"; formStyles.href = "form-enhancements.css"; document.head.append(formStyles);
+  const performanceStyles = document.createElement("link"); performanceStyles.rel = "stylesheet"; performanceStyles.href = "performance-boost.css"; document.head.append(performanceStyles);
   document.querySelector("#header").innerHTML = header(); document.querySelector("#footer").innerHTML = footer();
   const navButton = document.querySelector(".nav-toggle"), nav = document.querySelector(".site-nav");
   navButton?.addEventListener("click", () => { const open = nav.classList.toggle("open"); navButton.setAttribute("aria-expanded", open); });
+  nav?.querySelectorAll("a").forEach(link => link.addEventListener("click", () => {
+    if (window.innerWidth <= 840) {
+      nav.classList.remove("open");
+      navButton?.setAttribute("aria-expanded", "false");
+    }
+  }));
+  window.addEventListener("resize", () => {
+    if (window.innerWidth > 840) {
+      nav?.classList.remove("open");
+      navButton?.setAttribute("aria-expanded", "false");
+    }
+  });
   await loadProducts();
   renderProducts(document.querySelector("[data-products]"), page === "home" ? EAGLE.products.slice(0, 3) : EAGLE.products);
   setupQuoteForm(document.querySelector("[data-quote-form]"));
