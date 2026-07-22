@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Eagle favicon">
+  <rect width="64" height="64" rx="12" ry="12" fill="#19213c"/>
+  <path d="M18 36c6-10 32-12 38-4-6 10-28 18-38 4z" fill="#fffaf4" transform="translate(0,-2)" />
+  <path d="M42 20c2 1 4 3 2 6-2 3-7 3-10 1 4-4 6-8 8-7z" fill="#f0605a"/>
+  <text x="12" y="48" font-family="Arial, Helvetica, sans-serif" font-size="28" fill="#fffdf9" font-weight="700">E</text>
+</svg>

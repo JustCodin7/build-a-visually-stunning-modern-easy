@@ -103,6 +103,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   const refresh = document.createElement("link"); refresh.rel = "stylesheet"; refresh.href = "refresh.css"; document.head.append(refresh);
   const formStyles = document.createElement("link"); formStyles.rel = "stylesheet"; formStyles.href = "form-enhancements.css"; document.head.append(formStyles);
   const performanceStyles = document.createElement("link"); performanceStyles.rel = "stylesheet"; performanceStyles.href = "performance-boost.css"; document.head.append(performanceStyles);
+  // Ensure a favicon is present for all pages (falls back to the SVG in assets/)
+  if (!document.querySelector('link[rel="icon"]')) {
+    const fav = document.createElement('link');
+    fav.rel = 'icon';
+    fav.href = 'assets/favicon.svg';
+    fav.type = 'image/svg+xml';
+    document.head.append(fav);
+  }
   document.querySelector("#header").innerHTML = header(); document.querySelector("#footer").innerHTML = footer();
   const navButton = document.querySelector(".nav-toggle"), nav = document.querySelector(".site-nav");
   navButton?.addEventListener("click", () => { const open = nav.classList.toggle("open"); navButton.setAttribute("aria-expanded", open); });
